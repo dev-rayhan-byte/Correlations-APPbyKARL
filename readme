@@ -1,0 +1,17 @@
+# 📊 KARL — Correlation & Plot Lab
+
+An interactive web app for statistical correlation analysis and visualization.  
+Built with **Streamlit** for the KARL Lab.
+
+## ✨ Features
+- Upload Excel (`.xlsx`, `.xls`) or CSV files
+- Compute **Pearson, Spearman, Kendall’s Tau** correlations
+- Show correlation matrices in table form
+- Generate **Correlation Heatmaps**
+- Generate **Scatter Plots** (with optional regression line + r-value)
+- Generate **Pair Plots** (scatterplot matrix)
+
+## 🚀 Run Locally
+```bash
+pip install -r requirements.txt
+streamlit run app.py
