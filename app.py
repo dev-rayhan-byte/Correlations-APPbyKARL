@@ -161,19 +161,31 @@ if uploaded_file:
     numeric_df = df.select_dtypes(include=np.number)
     corr = numeric_df.corr(method=method)
 
-    # --- Tab 1: Heatmap ---
-    with tab1:
+   # --- Tab 1: Heatmap ---
+with tab1:
+    st.markdown("### Correlation Heatmaps (Multiple Styles)")
+
+    # Define 3 styles
+    heatmap_configs = [
+        ("Pearson-like Scale", "RdBu_r", -1, 1),
+        ("Monotonic Scale", "viridis", 0, 1),
+        ("Gradient Scale", "plasma", corr.values.min(), corr.values.max())
+    ]
+
+    for title, cmap, vmin, vmax in heatmap_configs:
+        st.markdown(f"#### {title}")
+
         fig_px = px.imshow(
             corr.values,
             x=corr.columns, y=corr.index,
-            zmin=-1, zmax=1,
-            color_continuous_scale="RdBu_r",
+            zmin=vmin, zmax=vmax,
+            color_continuous_scale=cmap,
             aspect="auto",
             text_auto=f".{heatmap_decimals}f" if corr.shape[0] <= 12 else False,
         )
         fig_px.update_traces(xgap=1, ygap=1)
         fig_px.update_layout(
-            title=f"Correlation Heatmap ({method.title()})",
+            title=f"{title} ({method.title()})",
             margin=dict(l=10, r=10, t=40, b=10),
             font=dict(family="DejaVu Serif" if paper_mode else None, size=14 if paper_mode else 12),
             coloraxis_colorbar=dict(title="Correlation")
@@ -181,15 +193,17 @@ if uploaded_file:
         fig_px.update_xaxes(tickangle=45)
         st.plotly_chart(fig_px, use_container_width=True)
 
+        # Downloadable high-res version
         fig_dl = heatmap_matplotlib(corr, decimals=heatmap_decimals)
         bytes_dl = fig_to_bytes(export_fmt, export_dpi)
         st.download_button(
-            f"Download Heatmap ({export_fmt.upper()}, {export_dpi} DPI)",
+            f"Download {title} ({export_fmt.upper()}, {export_dpi} DPI)",
             bytes_dl,
-            f"correlation_heatmap.{export_fmt}",
+            f"correlation_heatmap_{title.replace(' ', '_').lower()}.{export_fmt}",
             mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
         )
         plt.close(fig_dl)
+
 
     # --- Tab 2: Scatter ---
     with tab2:
