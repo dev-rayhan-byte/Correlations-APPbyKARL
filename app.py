@@ -5,8 +5,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 from io import BytesIO
-import io
-
 
 # -------------------------------
 # Streamlit App: KARL Lab Correlation Tool (Pro Edition)
@@ -15,9 +13,8 @@ st.set_page_config(page_title="KARL Correlation Tool", layout="wide")
 
 # ---------- Styling helpers ----------
 def apply_style(paper_mode: bool):
-    """Apply plotting style safely (no deprecated seaborn styles)."""
+    """Apply plotting style safely."""
     if paper_mode:
-        # Paper-grade, serif fonts, higher dpi, clean grid
         sns.set_theme(style="whitegrid")
         plt.rcParams.update({
             "font.family": "DejaVu Serif",
@@ -35,101 +32,53 @@ def apply_style(paper_mode: bool):
         sns.set_theme(style="ticks")
         plt.rcParams.update({"font.family": "sans-serif", "figure.dpi": 120, "savefig.dpi": 120})
 
-
 def fig_to_bytes(fmt: str, dpi: int) -> bytes:
-    """Save current Matplotlib figure to bytes in the requested format and DPI."""
+    """Save Matplotlib figure to bytes."""
     buf = BytesIO()
     plt.savefig(buf, format=fmt, dpi=dpi, bbox_inches="tight", pad_inches=0.1)
+    buf.seek(0)
     data = buf.getvalue()
-    buf.close()
+    plt.close()
     return data
-
-
-def heatmap_matplotlib(corr: pd.DataFrame, decimals: int = 2):
-    """High-quality heatmap for downloads (dynamic size, clean grid, optional annotations)."""
-    n = corr.shape[0]
-    w = max(6, min(0.9 * n, 24))
-    h = max(5, min(0.9 * n, 24))
-    fig, ax = plt.subplots(figsize=(w, h))
-
-    show_annot = n <= 18
-    annot_kws = {"size": 9} if n <= 14 else {"size": 8}
-
-    sns.heatmap(
-        corr, ax=ax, annot=show_annot, fmt=f".{decimals}f",
-        cmap="RdBu_r", vmin=-1, vmax=1, center=0,
-        square=False, linewidths=0.5, linecolor="0.9",
-        cbar_kws={"shrink": 0.8, "label": "Correlation"}
-    )
-    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
-    ax.set_yticklabels(ax.get_yticklabels(), rotation=0)
-
-    if show_annot:
-        for t in ax.texts:
-            t.set_fontsize(annot_kws["size"])
-
-    plt.tight_layout()
-    return fig
-
 
 # ---------- Custom CSS ----------
 st.markdown("""
     <style>
         .main { background-color: #f9fafc; }
         .stSidebar { background-color: #1c1c1c; color: #ffffff; }
-        .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar p, .stSidebar span, .stSidebar label {
-            color: #ffffff !important;
-        }
+        .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6,
+        .stSidebar p, .stSidebar span, .stSidebar label { color: #ffffff !important; }
         h1 { color: #002147; }
         .stTabs [data-baseweb="tab-list"] button { font-size: 16px; font-weight: 600; }
-        .credit-box {
-            padding: 12px;
-            border-radius: 10px;
-            background-color: #333333;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #ffffff;
-        }
-        .credit-box h4 { margin-bottom: 8px; color: #e6e6e6; }
+        .credit-box { padding:12px; border-radius:10px; background-color:#333333; margin-top:20px; font-size:14px; color:#ffffff; }
+        .credit-box h4 { margin-bottom:8px; color:#e6e6e6; }
     </style>
 """, unsafe_allow_html=True)
 
-
 # ---------- Title ----------
 st.title("Correlation & Visualization Tool (Pro Edition)")
-st.markdown(
-    """
-    <p style="font-size:18px; color:green; margin-top:-10px;">
-        A platform for interactive data correlation, visualization, 
-        and scientific insights — powered by <b>KARL</b>.
-    </p>
-    """,
-    unsafe_allow_html=True
-)
-
-# ---------- Sidebar logo ----------
-st.sidebar.markdown("""
-    <div style="text-align:center; margin-bottom:15px;">
-        <img src="https://raw.githubusercontent.com/dev-rayhan-byte/Correlations-APPbyKARL/2a8e89dfe0f61c2eaa204ff02656814506148c98/ddAsset%2011v3.png" width="150">
-    </div>
+st.markdown("""
+<p style="font-size:18px; color:green; margin-top:-10px;">
+    A platform for interactive data correlation, visualization, and scientific insights — powered by <b>KARL</b>.
+</p>
 """, unsafe_allow_html=True)
 
-
+# ---------- Sidebar Logo ----------
+st.sidebar.markdown("""
+<div style="text-align:center; margin-bottom:15px;">
+    <img src="https://raw.githubusercontent.com/dev-rayhan-byte/Correlations-APPbyKARL/2a8e89dfe0f61c2eaa204ff02656814506148c98/ddAsset%2011v3.png" width="150">
+</div>
+""", unsafe_allow_html=True)
 
 # ---------- File uploader ----------
 uploaded_file = st.file_uploader("Upload your dataset", type=["csv", "xlsx"])
 
 if uploaded_file:
-    # Read data
-    if uploaded_file.name.endswith(".csv"):
-        df = pd.read_csv(uploaded_file)
-    else:
-        df = pd.read_excel(uploaded_file)
-
+    df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith(".csv") else pd.read_excel(uploaded_file)
     st.subheader("Preview of Uploaded Data")
     st.dataframe(df.head(), use_container_width=True)
 
-    # ---------- Sidebar controls ----------
+    # ---------- Sidebar Controls ----------
     st.sidebar.header("Settings")
     method = st.sidebar.radio("Correlation Method", ["pearson", "spearman", "kendall"])
     paper_mode = st.sidebar.checkbox("Enable Paper-grade Style", value=False)
@@ -141,96 +90,78 @@ if uploaded_file:
     heatmap_decimals = st.sidebar.slider("Heatmap value decimals", 0, 4, 2)
 
     st.sidebar.markdown("""
-        <div class="credit-box">
-            <h4>Developer Team</h4>
-            <b>Developer:</b> Rayhan Miah<br>
-            <b>UX Designer & Benchmarking Lead:</b> Al Amin<br>
-            <b>Testing & QA Engineer:</b><br>
-            • Md Nurnabe Sagor<br>
-            • Pranto Das<br>
-            • Md. Sabbir Ahmed<br>
-            • Abu Sadat<br><br>
-            <b>Domain Expert:</b> Shahariar Emon<br>
-            <b>Co-Supervisor:</b> Md. Asaduzzaman<br>
-            <b>Supervisor:</b> Md. Khorshed Alam
-        </div>
+    <div class="credit-box">
+        <h4>Developer Team</h4>
+        <b>Developer:</b> Rayhan Miah<br>
+        <b>UX Designer & Benchmarking Lead:</b> Al Amin<br>
+        <b>Testing & QA Engineer:</b><br>
+        • Md Nurnabe Sagor<br>• Pranto Das<br>• Md. Sabbir Ahmed<br>• Abu Sadat<br><br>
+        <b>Domain Expert:</b> Shahariar Emon<br>
+        <b>Co-Supervisor:</b> Md. Asaduzzaman<br>
+        <b>Supervisor:</b> Md. Khorshed Alam
+    </div>
     """, unsafe_allow_html=True)
 
     # ---------- Tabs ----------
     tab1, tab2, tab3, tab4 = st.tabs(["Correlation Heatmap", "Scatter Plot", "Pair Plot", "Smart Insights"])
 
-    # Precompute
     numeric_df = df.select_dtypes(include=np.number)
     corr = numeric_df.corr(method=method)
 
- # --- Tab 1: Heatmap ---
-with tab1:
-    st.markdown("### Correlation Heatmaps (Multiple Styles)")
+    # --- Tab 1: Heatmap ---
+    with tab1:
+        st.markdown("### Correlation Heatmaps")
+        heatmap_configs = [
+            ("Diverging Heatmap", "RdBu_r", -1, 1, "diverging"),
+            ("Monotonic Heatmap", "viridis", 0, 1, "monotonic"),
+            ("Gradient Heatmap", "plasma", corr.values.min(), corr.values.max(), "gradient"),
+        ]
 
-    # Define 3 styles
-    heatmap_configs = [
-        ("Correlation Heatmap", "RdBu_r", -1, 1, "diverging"),
-        ("Correlation Heatmap", "viridis", 0, 1, "monotonic"),
-        ("Correlation Heatmap", "plasma", corr.values.min(), corr.values.max(), "gradient"),
-    ]
+        for title, cmap, vmin, vmax, tag in heatmap_configs:
+            st.markdown(f"#### {title} ({method.title()})")
+            fig_px = px.imshow(
+                corr.values, x=corr.columns, y=corr.index, zmin=vmin, zmax=vmax,
+                color_continuous_scale=cmap,
+                aspect="auto",
+                text_auto=f".{heatmap_decimals}f" if corr.shape[0] <= 12 else False
+            )
+            fig_px.update_traces(xgap=1, ygap=1)
+            fig_px.update_layout(
+                margin=dict(l=10, r=10, t=40, b=10),
+                font=dict(family="DejaVu Serif" if paper_mode else None, size=14 if paper_mode else 12),
+                coloraxis_colorbar=dict(title="Correlation"),
+                title=title
+            )
+            fig_px.update_xaxes(tickangle=45)
+            st.plotly_chart(fig_px, use_container_width=True)
 
-    for base_title, cmap, vmin, vmax, tag in heatmap_configs:
-        st.markdown(f"#### {base_title} ({method.title()})")
-        st.caption(f"Style: **{tag.title()}** | Range: [{vmin:.2f}, {vmax:.2f}]")
+            # Matplotlib download version
+            fig_dl, ax = plt.subplots(figsize=(6, 6))
+            im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
+            cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            cbar.set_label("Correlation", fontsize=14, fontweight="bold", family="DejaVu Serif")
+            ax.set_xticks(np.arange(len(corr.columns)))
+            ax.set_yticks(np.arange(len(corr.index)))
+            ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=12, family="DejaVu Serif")
+            ax.set_yticklabels(corr.index, fontsize=12, family="DejaVu Serif")
+            ax.set_title(title, fontsize=16, weight="bold", family="DejaVu Serif")
 
-        # Interactive Plotly heatmap
-        fig_px = px.imshow(
-            corr.values,
-            x=corr.columns, y=corr.index,
-            zmin=vmin, zmax=vmax,
-            color_continuous_scale=cmap,
-            aspect="auto",
-            text_auto=f".{heatmap_decimals}f" if corr.shape[0] <= 12 else False,
-        )
-        fig_px.update_layout(
-            margin=dict(l=10, r=10, t=40, b=10),
-            font=dict(family="DejaVu Serif" if paper_mode else None, size=14 if paper_mode else 12),
-            coloraxis_colorbar=dict(title="Correlation")
-        )
-        fig_px.update_xaxes(tickangle=45)
-        st.plotly_chart(fig_px, use_container_width=True)
+            if corr.shape[0] <= 12:
+                for i in range(len(corr.index)):
+                    for j in range(len(corr.columns)):
+                        ax.text(j, i, f"{corr.iloc[i,j]:.{heatmap_decimals}f}", ha="center", va="center", color="black", fontsize=10, family="DejaVu Serif")
+            plt.tight_layout()
 
-        # Download-ready Matplotlib heatmap
-        n = corr.shape[0]
-        figsize_val = max(6, min(0.8 * n, 20))  # dynamic sizing
-        font_sz = 10 if n <= 14 else 8
-
-        fig_dl, ax = plt.subplots(figsize=(figsize_val, figsize_val))  # square
-        sns.heatmap(
-            corr, ax=ax,
-            annot=(n<=12),
-            fmt=f".{heatmap_decimals}f",
-            cmap=cmap, vmin=vmin, vmax=vmax, center=None,
-            linewidths=0.5, linecolor="0.9",
-            cbar_kws={"shrink": 0.8, "label": "Correlation"}
-        )
-
-        # Adjust labels and title
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=font_sz, family="DejaVu Serif")
-        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=font_sz, family="DejaVu Serif")
-        ax.set_title(f"{base_title} ({method.title()})", fontsize=14, fontweight="bold", family="DejaVu Serif")
-        plt.tight_layout()
-
-        # Save to bytes for download
-        buf = BytesIO()
-        fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
-        buf.seek(0)
-
-        st.download_button(
-            f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
-            buf,
-            file_name=f"correlation_heatmap_{tag}.{export_fmt}",
-            mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
-        )
-        plt.close(fig_dl)
-
-
-
+            buf = BytesIO()
+            fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
+            buf.seek(0)
+            st.download_button(
+                f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
+                buf,
+                file_name=f"correlation_heatmap_{tag}.{export_fmt}",
+                mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
+            )
+            plt.close(fig_dl)
 
     # --- Tab 2: Scatter ---
     with tab2:
@@ -239,16 +170,13 @@ with tab1:
         y_var = st.selectbox("Y-axis", numeric_cols)
         reg_option = st.checkbox("Add Regression Line")
 
-        if reg_option:
-            fig_sc = px.scatter(df, x=x_var, y=y_var, trendline="ols", title=f"Scatter: {x_var} vs {y_var}")
-        else:
-            fig_sc = px.scatter(df, x=x_var, y=y_var, title=f"Scatter: {x_var} vs {y_var}")
-
+        fig_sc = px.scatter(df, x=x_var, y=y_var, trendline="ols" if reg_option else None, title=f"Scatter: {x_var} vs {y_var}")
         st.plotly_chart(fig_sc, use_container_width=True)
 
+        # Download button for matplotlib version
         plt.figure(figsize=(6.5, 5.0))
         if reg_option:
-            sns.regplot(x=df[x_var], y=df[y_var], scatter_kws={"s": 25})
+            sns.regplot(x=df[x_var], y=df[y_var], scatter_kws={"s":25})
         else:
             sns.scatterplot(x=df[x_var], y=df[y_var])
         plt.title(f"Scatter: {x_var} vs {y_var}")
