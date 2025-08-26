@@ -4,7 +4,6 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-import plotly.figure_factory as ff
 from io import BytesIO
 
 # -------------------------------
@@ -12,29 +11,33 @@ from io import BytesIO
 # -------------------------------
 st.set_page_config(page_title="KARL Correlation Tool", layout="wide")
 
-# Custom CSS for stylish UI
+# Custom CSS for professional UI
 st.markdown("""
     <style>
         .main { background-color: #f9fafc; }
-        .stSidebar { background-color: #e6f0ff; }
-        h1 { color: #003366; }
+        .stSidebar { background-color: #1c1c1c; color: white; }
+        .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6, .stSidebar p {
+            color: white !important;
+        }
+        h1 { color: #002147; }
         .stTabs [data-baseweb="tab-list"] button { font-size: 16px; font-weight: 600; }
         .credit-box {
             padding: 12px;
             border-radius: 10px;
-            background-color: #dce9f9;
+            background-color: #333333;
             margin-top: 20px;
             font-size: 14px;
+            color: white;
         }
-        .credit-box h4 { margin-bottom: 8px; color: #002147; }
+        .credit-box h4 { margin-bottom: 8px; color: #e6e6e6; }
     </style>
 """, unsafe_allow_html=True)
 
 # Title
-st.title("📊 KARL Lab Correlation & Visualization Tool (Pro Edition)")
+st.title("KARL Lab Correlation & Visualization Tool (Pro Edition)")
 
 # File uploader
-uploaded_file = st.file_uploader("📂 Upload your dataset", type=["csv", "xlsx"])
+uploaded_file = st.file_uploader("Upload your dataset", type=["csv", "xlsx"])
 
 if uploaded_file:
     # Read data
@@ -43,19 +46,38 @@ if uploaded_file:
     else:
         df = pd.read_excel(uploaded_file)
 
-    st.subheader("🔎 Preview of Uploaded Data")
+    st.subheader("Preview of Uploaded Data")
     st.dataframe(df.head(), use_container_width=True)
 
     # Sidebar Options
-    st.sidebar.header("⚙️ Settings")
+    st.sidebar.header("Settings")
 
     # Correlation Method
     method = st.sidebar.radio("Correlation Method", ["pearson", "spearman", "kendall"])
 
+    # Paper style toggle
+    paper_mode = st.sidebar.checkbox("Enable Paper-Grade Style (for publication)")
+
+    if paper_mode:
+        plt.style.use("seaborn-whitegrid")
+        plt.rcParams.update({
+            "font.family": "serif",
+            "font.size": 14,
+            "axes.labelsize": 14,
+            "axes.titlesize": 16,
+            "legend.fontsize": 12,
+            "xtick.labelsize": 12,
+            "ytick.labelsize": 12,
+            "figure.dpi": 300,
+            "savefig.dpi": 300
+        })
+    else:
+        plt.style.use("default")
+
     # Developer & Credits
     st.sidebar.markdown("""
         <div class="credit-box">
-            <h4>👨‍💻 Developer Team</h4>
+            <h4>Developer Team</h4>
             <b>Developer:</b> Rayhan Miah<br>
             <b>UX Designer:</b> Al Amin<br>
             <b>Testing & QA Engineer:</b><br>
@@ -69,14 +91,15 @@ if uploaded_file:
         </div>
     """, unsafe_allow_html=True)
 
-    # Tabs for navigation
-    tab1, tab2, tab3, tab4 = st.tabs(["📌 Correlation Heatmap", "📌 Scatter Plot", "📌 Pair Plot", "📌 Smart Insights"])
+    # Tabs
+    tab1, tab2, tab3, tab4 = st.tabs(["Correlation Heatmap", "Scatter Plot", "Pair Plot", "Smart Insights"])
 
     # ---------------------------
     # Tab 1: Correlation Heatmap
     # ---------------------------
     with tab1:
-        corr = df.corr(method=method, numeric_only=True)
+        numeric_df = df.select_dtypes(include=np.number)
+        corr = numeric_df.corr(method=method)
 
         fig = px.imshow(
             corr,
@@ -90,13 +113,13 @@ if uploaded_file:
         # Download correlation matrix
         csv_corr = corr.to_csv().encode("utf-8")
         st.download_button(
-            "⬇️ Download Correlation Matrix (CSV)",
+            "Download Correlation Matrix (CSV)",
             csv_corr,
             "correlation_matrix.csv",
             "text/csv"
         )
 
-        # TIFF Downloader for Heatmap
+        # TIFF Downloader
         buf = BytesIO()
         plt.figure(figsize=(8, 6))
         sns.heatmap(corr, annot=True, cmap="coolwarm", center=0)
@@ -104,7 +127,7 @@ if uploaded_file:
         plt.tight_layout()
         plt.savefig(buf, format="tiff", dpi=300)
         st.download_button(
-            "⬇️ Download Heatmap (TIFF)",
+            "Download Heatmap (TIFF)",
             buf.getvalue(),
             "correlation_heatmap.tiff",
             "image/tiff"
@@ -127,7 +150,7 @@ if uploaded_file:
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # TIFF Downloader for Scatter
+        # TIFF Downloader
         buf = BytesIO()
         plt.figure(figsize=(6, 5))
         if reg_option:
@@ -138,7 +161,7 @@ if uploaded_file:
         plt.tight_layout()
         plt.savefig(buf, format="tiff", dpi=300)
         st.download_button(
-            "⬇️ Download Scatter (TIFF)",
+            "Download Scatter (TIFF)",
             buf.getvalue(),
             "scatter_plot.tiff",
             "image/tiff"
@@ -154,38 +177,38 @@ if uploaded_file:
             fig = px.scatter_matrix(df[selected_cols], title="Pair Plot (Scatterplot Matrix)")
             st.plotly_chart(fig, use_container_width=True)
 
-            # TIFF Downloader for Pairplot
+            # TIFF Downloader
             buf = BytesIO()
             g = sns.pairplot(df[selected_cols])
             g.savefig(buf, format="tiff", dpi=300)
             st.download_button(
-                "⬇️ Download Pair Plot (TIFF)",
+                "Download Pair Plot (TIFF)",
                 buf.getvalue(),
                 "pair_plot.tiff",
                 "image/tiff"
             )
         else:
-            st.warning("⚠️ Please select at least 2 variables for pair plot.")
+            st.warning("Please select at least 2 variables for pair plot.")
 
     # ---------------------------
     # Tab 4: Smart Insights
     # ---------------------------
     with tab4:
-        st.subheader("🤖 Automated Correlation Insights")
+        st.subheader("Automated Correlation Insights")
         corr_unstacked = corr.unstack().sort_values(ascending=False)
 
         # Remove self-correlations
         corr_unstacked = corr_unstacked[corr_unstacked < 0.9999]
 
-        # Top 5 strongest positive & negative correlations
+        # Top 5 positive & negative correlations
         top_pos = corr_unstacked.head(5)
         top_neg = corr_unstacked.tail(5)
 
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("### 🔺 Strongest Positive Correlations")
+            st.markdown("### Strongest Positive Correlations")
             st.table(top_pos.to_frame("Correlation"))
 
         with col2:
-            st.markdown("### 🔻 Strongest Negative Correlations")
+            st.markdown("### Strongest Negative Correlations")
             st.table(top_neg.to_frame("Correlation"))
