@@ -5,6 +5,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
 from io import BytesIO
+import io
+
 
 # -------------------------------
 # Streamlit App: KARL Lab Correlation Tool (Pro Edition)
