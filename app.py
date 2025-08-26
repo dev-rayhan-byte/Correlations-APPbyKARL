@@ -99,9 +99,10 @@ st.title("KARL Lab Correlation & Visualization Tool (Pro Edition)")
 # ---------- Sidebar logo ----------
 st.sidebar.markdown("""
     <div style="text-align:center; margin-bottom:15px;">
-        <img src="https://github.com/dev-rayhan-byte/Correlations-APPbyKARL/blob/2a8e89dfe0f61c2eaa204ff02656814506148c98/ddAsset%2011v3.png" width="150">
+        <img src="https://raw.githubusercontent.com/dev-rayhan-byte/Correlations-APPbyKARL/2a8e89dfe0f61c2eaa204ff02656814506148c98/ddAsset%2011v3.png" width="150">
     </div>
 """, unsafe_allow_html=True)
+
 
 
 # ---------- File uploader ----------
