@@ -108,74 +108,46 @@ if uploaded_file:
     numeric_df = df.select_dtypes(include=np.number)
     corr = numeric_df.corr(method=method)
 
-   # --- Tab 1: Heatmap ---
-    with tab1:
-        st.markdown("### Correlation Heatmaps")
-    
-    # Clean numeric dataframe
-    numeric_df_clean = numeric_df.loc[:, ~numeric_df.columns.str.contains("Unnamed")]
-    corr = numeric_df_clean.corr(method=method)
-    
-    heatmap_configs = [
-        ("Diverging Heatmap", "RdBu_r", -1, 1, "diverging"),
-        ("Monotonic Heatmap", "viridis", 0, 1, "monotonic"),
-        ("Gradient Heatmap", "plasma", corr.values.min(), corr.values.max(), "gradient"),
-    ]
+  # Matplotlib version for download (large with borders)
+fig_dl, ax = plt.subplots(figsize=(len(corr.columns) * 1.8, len(corr.columns) * 1.8))
+im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
 
-    for title, cmap, vmin, vmax, tag in heatmap_configs:
-        st.markdown(f"#### {title} ({method.title()})")
-        
-        # Plotly interactive heatmap
-        fig_px = px.imshow(
-            corr.values,
-            x=corr.columns,
-            y=corr.index,
-            zmin=vmin,
-            zmax=vmax,
-            color_continuous_scale=cmap,
-            text_auto=f".{heatmap_decimals}f",
-            aspect="equal"
-        )
-        fig_px.update_traces(xgap=3, ygap=3)  # larger boxes
-        fig_px.update_layout(
-            margin=dict(l=70, r=70, t=60, b=60),
-            font=dict(family="DejaVu Serif" if paper_mode else None, size=12),
-            coloraxis_colorbar=dict(title="Correlation"),
-            title=f"{method.title()} Correlation"
-        )
-        fig_px.update_xaxes(tickangle=45)
-        st.plotly_chart(fig_px, use_container_width=True)
-        
-        # Matplotlib version for download
-        fig_dl, ax = plt.subplots(figsize=(len(corr.columns)*1.2, len(corr.columns)*1.2))
-        im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
-        cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        cbar.set_label("Correlation", fontsize=12, fontweight="bold", family="DejaVu Serif")
-        
-        ax.set_xticks(np.arange(len(corr.columns)))
-        ax.set_yticks(np.arange(len(corr.index)))
-        ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=10, family="DejaVu Serif")
-        ax.set_yticklabels(corr.index, fontsize=10, family="DejaVu Serif")
-        ax.set_title(f"{method.title()} Correlation", fontsize=16, weight="bold", family="DejaVu Serif")
-        
-        # Annotate each cell
-        for i in range(len(corr.index)):
-            for j in range(len(corr.columns)):
-                ax.text(j, i, f"{corr.iloc[i,j]:.{heatmap_decimals}f}",
-                        ha="center", va="center", color="black", fontsize=9, family="DejaVu Serif")
-        
-        plt.tight_layout()
-        buf = BytesIO()
-        fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
-        buf.seek(0)
-        
-        st.download_button(
-            f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
-            buf,
-            file_name=f"{method.title()}_Correlation.{export_fmt}",
-            mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
-        )
-        plt.close(fig_dl)
+# Colorbar
+cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+cbar.set_label("Correlation", fontsize=12, fontweight="bold", family="DejaVu Serif")
+
+# Set ticks
+ax.set_xticks(np.arange(len(corr.columns)))
+ax.set_yticks(np.arange(len(corr.index)))
+ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=12, family="DejaVu Serif")
+ax.set_yticklabels(corr.index, fontsize=12, family="DejaVu Serif")
+ax.set_title(f"{method.title()} Correlation", fontsize=18, weight="bold", family="DejaVu Serif")
+
+# Annotate cells
+for i in range(len(corr.index)):
+    for j in range(len(corr.columns)):
+        ax.text(j, i, f"{corr.iloc[i,j]:.{heatmap_decimals}f}",
+                ha="center", va="center", color="black", fontsize=10, family="DejaVu Serif")
+
+# Add cell borders
+for i in range(len(corr.index)):
+    for j in range(len(corr.columns)):
+        rect = plt.Rectangle((j-0.5, i-0.5), 1, 1, fill=False, edgecolor="black", linewidth=0.6)
+        ax.add_patch(rect)
+
+plt.tight_layout()
+buf = BytesIO()
+fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
+buf.seek(0)
+
+st.download_button(
+    f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
+    buf,
+    file_name=f"{method.title()}_Correlation.{export_fmt}",
+    mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
+)
+plt.close(fig_dl)
+
 
 
 
