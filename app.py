@@ -109,8 +109,8 @@ if uploaded_file:
     corr = numeric_df.corr(method=method)
 
    # --- Tab 1: Heatmap ---
-with tab1:
-    st.markdown("### Correlation Heatmaps")
+    with tab1:
+        st.markdown("### Correlation Heatmaps")
     
     # Clean numeric dataframe
     numeric_df_clean = numeric_df.loc[:, ~numeric_df.columns.str.contains("Unnamed")]
