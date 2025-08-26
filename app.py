@@ -162,8 +162,8 @@ if uploaded_file:
     corr = numeric_df.corr(method=method)
 
   # --- Tab 1: Heatmap ---
-with tab1:
-    st.markdown("### Correlation Heatmaps (Multiple Styles)")
+    with tab1:
+        st.markdown("### Correlation Heatmaps (Multiple Styles)")
 
     # Define 3 styles
     heatmap_configs = [
