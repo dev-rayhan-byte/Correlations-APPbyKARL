@@ -144,7 +144,7 @@ if uploaded_file:
         <div class="credit-box">
             <h4>Developer Team</h4>
             <b>Developer:</b> Rayhan Miah<br>
-            <b>UX Designer:</b> Al Amin<br>
+            <b>UX Designer & Benchmarking Lead:</b> Al Amin<br>
             <b>Testing & QA Engineer:</b><br>
             • Md Nurnabe Sagor<br>
             • Pranto Das<br>
@@ -163,9 +163,9 @@ if uploaded_file:
     numeric_df = df.select_dtypes(include=np.number)
     corr = numeric_df.corr(method=method)
 
-  # --- Tab 1: Heatmap ---
-    with tab1:
-        st.markdown("### Correlation Heatmaps (Multiple Styles)")
+ # --- Tab 1: Heatmap ---
+with tab1:
+    st.markdown("### Correlation Heatmaps (Multiple Styles)")
 
     # Define 3 styles
     heatmap_configs = [
@@ -176,9 +176,9 @@ if uploaded_file:
 
     for base_title, cmap, vmin, vmax, tag in heatmap_configs:
         st.markdown(f"#### {base_title} ({method.title()})")
-        st.caption(f"Style: **{tag.title()}** | Colormap: *{cmap}* | Range: [{vmin}, {vmax}]")
+        st.caption(f"Style: **{tag.title()}** | Range: [{vmin:.2f}, {vmax:.2f}]")
 
-        # Interactive Plotly view
+        # Interactive Plotly heatmap
         fig_px = px.imshow(
             corr.values,
             x=corr.columns, y=corr.index,
@@ -187,56 +187,48 @@ if uploaded_file:
             aspect="auto",
             text_auto=f".{heatmap_decimals}f" if corr.shape[0] <= 12 else False,
         )
-        fig_px.update_traces(xgap=1, ygap=1)
         fig_px.update_layout(
             margin=dict(l=10, r=10, t=40, b=10),
             font=dict(family="DejaVu Serif" if paper_mode else None, size=14 if paper_mode else 12),
-            coloraxis_colorbar=dict(title="Correlation"),
-            title=f"{base_title} ({method.title()})"
+            coloraxis_colorbar=dict(title="Correlation")
         )
         fig_px.update_xaxes(tickangle=45)
         st.plotly_chart(fig_px, use_container_width=True)
 
-        # High-resolution Matplotlib version for download
-        fig_dl, ax = plt.subplots(figsize=(6, 6))  # Square figure
-        im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
-        cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-        cbar.set_label("Correlation", fontsize=14, fontweight="bold", family="DejaVu Serif")
+        # Download-ready Matplotlib heatmap
+        n = corr.shape[0]
+        figsize_val = max(6, min(0.8 * n, 20))  # dynamic sizing
+        font_sz = 10 if n <= 14 else 8
 
-        # Labels
-        ax.set_xticks(np.arange(len(corr.columns)))
-        ax.set_yticks(np.arange(len(corr.index)))
-        ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=12, family="DejaVu Serif")
-        ax.set_yticklabels(corr.index, fontsize=12, family="DejaVu Serif")
+        fig_dl, ax = plt.subplots(figsize=(figsize_val, figsize_val))  # square
+        sns.heatmap(
+            corr, ax=ax,
+            annot=(n<=12),
+            fmt=f".{heatmap_decimals}f",
+            cmap=cmap, vmin=vmin, vmax=vmax, center=None,
+            linewidths=0.5, linecolor="0.9",
+            cbar_kws={"shrink": 0.8, "label": "Correlation"}
+        )
 
-        # Title
-        ax.set_title(f"{base_title} ({method.title()})", fontsize=16, weight="bold", family="DejaVu Serif")
-
-        # Annotate values (if small matrix)
-        if corr.shape[0] <= 12:
-            for i in range(len(corr.index)):
-                for j in range(len(corr.columns)):
-                    ax.text(
-                        j, i, f"{corr.iloc[i, j]:.{heatmap_decimals}f}",
-                        ha="center", va="center", color="black", fontsize=10, family="DejaVu Serif"
-                    )
-
+        # Adjust labels and title
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right", fontsize=font_sz, family="DejaVu Serif")
+        ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=font_sz, family="DejaVu Serif")
+        ax.set_title(f"{base_title} ({method.title()})", fontsize=14, fontweight="bold", family="DejaVu Serif")
         plt.tight_layout()
 
-        # Export as bytes
-        buf = io.BytesIO()
+        # Save to bytes for download
+        buf = BytesIO()
         fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
         buf.seek(0)
 
-        # Download button with style tag
         st.download_button(
             f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
             buf,
             file_name=f"correlation_heatmap_{tag}.{export_fmt}",
             mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
         )
-
         plt.close(fig_dl)
+
 
 
 
