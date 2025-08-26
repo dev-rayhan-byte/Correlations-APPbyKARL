@@ -30,11 +30,7 @@ def apply_style(paper_mode: bool):
         })
     else:
         sns.set_theme(style="ticks")
-        plt.rcParams.update({
-            "font.family": "sans-serif",
-            "figure.dpi": 120,
-            "savefig.dpi": 120
-        })
+        plt.rcParams.update({"font.family": "sans-serif", "figure.dpi": 120, "savefig.dpi": 120})
 
 def fig_to_bytes(fmt: str, dpi: int) -> bytes:
     """Save Matplotlib figure to bytes."""
@@ -112,83 +108,74 @@ if uploaded_file:
     numeric_df = df.select_dtypes(include=np.number)
     corr = numeric_df.corr(method=method)
 
-    # --- Tab 1: Heatmap ---
-    with tab1:
-        st.markdown("### Correlation Heatmaps")
+   # --- Tab 1: Heatmap ---
+with tab1:
+    st.markdown("### Correlation Heatmaps")
+    
+    # Drop non-numeric or unnamed columns
+    numeric_df_clean = numeric_df.loc[:, ~numeric_df.columns.str.contains("Unnamed")]
+    corr = numeric_df_clean.corr(method=method)
+    
+    heatmap_configs = [
+        ("Diverging Heatmap", "RdBu_r", -1, 1, "diverging"),
+        ("Monotonic Heatmap", "viridis", 0, 1, "monotonic"),
+        ("Gradient Heatmap", "plasma", corr.values.min(), corr.values.max(), "gradient"),
+    ]
 
-        numeric_df_clean = numeric_df.loc[:, ~numeric_df.columns.str.contains("Unnamed")]
-        corr = numeric_df_clean.corr(method=method)
-        n_vars = len(corr.columns)
+    for title, cmap, vmin, vmax, tag in heatmap_configs:
+        st.markdown(f"#### {title} ({method.title()})")
+        
+        # Plotly version
+        fig_px = px.imshow(
+            corr.values,
+            x=corr.columns,
+            y=corr.index,
+            zmin=vmin,
+            zmax=vmax,
+            color_continuous_scale=cmap,
+            text_auto=f".{heatmap_decimals}f",
+            aspect="equal"
+        )
+        fig_px.update_traces(xgap=2, ygap=2)  # Make boxes larger
+        fig_px.update_layout(
+            margin=dict(l=50, r=50, t=50, b=50),
+            font=dict(family="DejaVu Serif" if paper_mode else None, size=10 if len(corr.columns)>8 else 12),
+            coloraxis_colorbar=dict(title="Correlation"),
+            title=title
+        )
+        fig_px.update_xaxes(tickangle=45)
+        st.plotly_chart(fig_px, use_container_width=True)
+        
+        # Matplotlib version for download
+        fig_dl, ax = plt.subplots(figsize=(len(corr.columns)*0.7, len(corr.columns)*0.7))  # make box bigger
+        im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
+        cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        cbar.set_label("Correlation", fontsize=12, fontweight="bold", family="DejaVu Serif")
+        
+        ax.set_xticks(np.arange(len(corr.columns)))
+        ax.set_yticks(np.arange(len(corr.index)))
+        ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=9, family="DejaVu Serif")
+        ax.set_yticklabels(corr.index, fontsize=9, family="DejaVu Serif")
+        ax.set_title(title, fontsize=14, weight="bold", family="DejaVu Serif")
+        
+        for i in range(len(corr.index)):
+            for j in range(len(corr.columns)):
+                ax.text(j, i, f"{corr.iloc[i,j]:.{heatmap_decimals}f}", ha="center", va="center",
+                        color="black", fontsize=8, family="DejaVu Serif")
+        
+        plt.tight_layout()
+        buf = BytesIO()
+        fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
+        buf.seek(0)
+        
+        st.download_button(
+            f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
+            buf,
+            file_name=f"correlation_heatmap_{tag}.{export_fmt}",
+            mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
+        )
+        plt.close(fig_dl)
 
-        heatmap_configs = [
-            ("Diverging Heatmap", "RdBu_r", -1, 1),
-            ("Monotonic Heatmap", "viridis", 0, 1),
-            ("Gradient Heatmap", "plasma", corr.values.min(), corr.values.max()),
-        ]
-
-        for title, cmap, vmin, vmax in heatmap_configs:
-            st.markdown(f"#### {title} ({method.title()})")
-
-            # ----- Plotly Interactive -----
-            font_size = max(8, 18 - n_vars // 2)
-            fig_px = px.imshow(
-                corr.values,
-                x=corr.columns,
-                y=corr.index,
-                zmin=vmin,
-                zmax=vmax,
-                color_continuous_scale=cmap,
-                text_auto=f".{heatmap_decimals}f",
-                aspect="equal"  # <-- square cells
-            )
-            fig_px.update_traces(xgap=0, ygap=0)
-            fig_px.update_layout(
-                margin=dict(l=70, r=70, t=50, b=50),
-                font=dict(family="DejaVu Serif" if paper_mode else None, size=font_size),
-                coloraxis_colorbar=dict(title="Correlation"),
-                title=title
-            )
-            fig_px.update_xaxes(tickangle=45)
-            st.plotly_chart(fig_px, use_container_width=True)
-
-            # ----- Matplotlib Download Version -----
-            figsize_val = max(6, n_vars * 0.7)
-            fig_dl, ax = plt.subplots(figsize=(figsize_val, figsize_val))
-            im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax, aspect="equal")
-
-            cbar = plt.colorbar(im, ax=ax, fraction=0.035, pad=0.02)
-            cbar.set_label("Correlation", fontsize=12, fontweight="bold", family="DejaVu Serif")
-
-            ax.set_xticks(np.arange(n_vars))
-            ax.set_yticks(np.arange(n_vars))
-            ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=max(8, font_size-2), family="DejaVu Serif")
-            ax.set_yticklabels(corr.index, fontsize=max(8, font_size-2), family="DejaVu Serif")
-            ax.set_title(f"{method.title()} Correlation", fontsize=16, weight="bold", family="DejaVu Serif")
-
-            # Annotate values
-            for i in range(n_vars):
-                for j in range(n_vars):
-                    ax.text(j, i, f"{corr.iloc[i, j]:.{heatmap_decimals}f}",
-                            ha="center", va="center", color="black", fontsize=max(7, font_size-3), family="DejaVu Serif")
-
-            # Gridlines for square cells
-            ax.set_xticks(np.arange(-0.5, n_vars, 1), minor=True)
-            ax.set_yticks(np.arange(-0.5, n_vars, 1), minor=True)
-            ax.grid(which="minor", color="black", linestyle="-", linewidth=0.5)
-            ax.tick_params(which="minor", bottom=False, left=False)
-            plt.tight_layout()
-
-            buf = BytesIO()
-            fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi, bbox_inches="tight", facecolor="white")
-            buf.seek(0)
-
-            st.download_button(
-                f"Download ({method.title()} Heatmap, {export_fmt.upper()}, {export_dpi} DPI)",
-                buf,
-                file_name=f"{method.lower()}_correlation_heatmap.{export_fmt}",
-                mime={"png": "image/png", "jpg": "image/jpeg", "tiff": "image/tiff"}[export_fmt]
-            )
-            plt.close(fig_dl)
 
     # --- Tab 2: Scatter ---
     with tab2:
@@ -197,14 +184,13 @@ if uploaded_file:
         y_var = st.selectbox("Y-axis", numeric_cols)
         reg_option = st.checkbox("Add Regression Line")
 
-        fig_sc = px.scatter(df, x=x_var, y=y_var,
-                            trendline="ols" if reg_option else None,
-                            title=f"Scatter: {x_var} vs {y_var}")
+        fig_sc = px.scatter(df, x=x_var, y=y_var, trendline="ols" if reg_option else None, title=f"Scatter: {x_var} vs {y_var}")
         st.plotly_chart(fig_sc, use_container_width=True)
 
+        # Download button for matplotlib version
         plt.figure(figsize=(6.5, 5.0))
         if reg_option:
-            sns.regplot(x=df[x_var], y=df[y_var], scatter_kws={"s": 25})
+            sns.regplot(x=df[x_var], y=df[y_var], scatter_kws={"s":25})
         else:
             sns.scatterplot(x=df[x_var], y=df[y_var])
         plt.title(f"Scatter: {x_var} vs {y_var}")
