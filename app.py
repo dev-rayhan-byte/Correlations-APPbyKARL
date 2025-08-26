@@ -94,7 +94,16 @@ st.markdown("""
 
 
 # ---------- Title ----------
-st.title("KARL Lab Correlation & Visualization Tool (Pro Edition)")
+st.title("Correlation & Visualization Tool (Pro Edition)")
+st.markdown(
+    """
+    <p style="font-size:18px; color:green; margin-top:-10px;">
+        A platform for interactive data correlation, visualization, 
+        and scientific insights — powered by <b>KARL</b>.
+    </p>
+    """,
+    unsafe_allow_html=True
+)
 
 # ---------- Sidebar logo ----------
 st.sidebar.markdown("""
