@@ -78,60 +78,29 @@ if uploaded_file:
     st.subheader("Preview of Uploaded Data")
     st.dataframe(df.head(), use_container_width=True)
 
-        # ---------- Styling helpers ----------
-    def apply_style(custom_style: dict):
-        """Apply plotting style with user control."""
-        sns.set_theme(style=custom_style["style"])
-        plt.rcParams.update({
-            "font.family": custom_style["font_family"],
-            "font.size": custom_style["font_size"],
-            "axes.labelsize": custom_style["font_size"],
-            "axes.titlesize": custom_style["font_size"] + 2,
-            "legend.fontsize": custom_style["font_size"] - 2,
-            "xtick.labelsize": custom_style["font_size"] - 2,
-            "ytick.labelsize": custom_style["font_size"] - 2,
-            "figure.dpi": custom_style["dpi"],
-            "savefig.dpi": custom_style["dpi"],
-            "axes.linewidth": custom_style["linewidth"],
-        })
-    
     # ---------- Sidebar Controls ----------
     st.sidebar.header("Settings")
     method = st.sidebar.radio("Correlation Method", ["pearson", "spearman", "kendall"])
-    
-    # 🎛 Manual Gear Option for Paper Style
-    paper_mode = st.sidebar.checkbox("Enable Paper-grade Style (Manual Gear)", value=False)
-    if paper_mode:
-        with st.sidebar.expander("⚙️ Customize Paper Style", expanded=True):
-            font_family = st.selectbox(
-                "Font Family",
-                ["DejaVu Serif", "Times New Roman", "Arial", "Helvetica", "Computer Modern"]
-            )
-            font_size = st.slider("Base Font Size", 8, 20, 12)
-            linewidth = st.slider("Axis Line Width", 0.5, 3.0, 1.0, step=0.1)
-            dpi = st.selectbox("DPI", [100, 150, 200, 300, 600], index=3)
-            style = st.selectbox("Seaborn Style", ["whitegrid", "ticks", "darkgrid", "white"])
-    
-            custom_style = {
-                "font_family": font_family,
-                "font_size": font_size,
-                "linewidth": linewidth,
-                "dpi": dpi,
-                "style": style
-            }
-    else:
-        # default simple style if not enabled
-        custom_style = {
-            "font_family": "sans-serif",
-            "font_size": 11,
-            "linewidth": 1.0,
-            "dpi": 120,
-            "style": "ticks"
-        }
-    
-    # apply style settings
-    apply_style(custom_style)
+    paper_mode = st.sidebar.checkbox("Enable Paper-grade Style", value=False)
+    apply_style(paper_mode)
 
+    st.sidebar.header("Export")
+    export_fmt = st.sidebar.selectbox("Format", ["png", "jpg", "tiff"], index=0)
+    export_dpi = st.sidebar.selectbox("DPI", [100, 150, 200, 300, 600], index=3)
+    heatmap_decimals = st.sidebar.slider("Heatmap value decimals", 0, 4, 2)
+
+    st.sidebar.markdown("""
+    <div class="credit-box">
+        <h4>Developer Team</h4>
+        <b>Developer:</b> Rayhan Miah<br>
+        <b>UX Designer & Benchmarking Lead:</b> Al Amin<br>
+        <b>Testing & QA Engineer:</b><br>
+        • Md Nurnabe Sagor<br>• Pranto Das<br>• Md. Sabbir Ahmed<br>• Abu Sadat<br><br>
+        <b>Domain Expert:</b> Shahariar Emon<br>
+        <b>Co-Supervisor:</b> Md. Asaduzzaman<br>
+        <b>Supervisor:</b> Md. Khorshed Alam
+    </div>
+    """, unsafe_allow_html=True)
 
     # ---------- Tabs ----------
     tab1, tab2, tab3, tab4 = st.tabs(["Correlation Heatmap", "Scatter Plot", "Pair Plot", "Smart Insights"])
@@ -187,38 +156,39 @@ if uploaded_file:
                 figsize=(len(corr.columns) * 0.8, len(corr.columns) * 0.8)
             )
             im = ax.imshow(corr.values, cmap=cmap, vmin=vmin, vmax=vmax)
-            
+    
+            # borders for each cell
+            for edge, spine in ax.spines.items():
+                spine.set_visible(False)
             ax.set_xticks(np.arange(len(corr.columns)))
             ax.set_yticks(np.arange(len(corr.index)))
-            ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=9, family=custom_style["font_family"])
-            ax.set_yticklabels(corr.index, fontsize=9, family=custom_style["font_family"])
-            
-            # ✅ clean cell borders (manual rectangles, no grid artifacts)
-            for i in range(len(corr.index)):
-                for j in range(len(corr.columns)):
-                    rect = plt.Rectangle((j-0.5, i-0.5), 1, 1,
-                                         fill=False, edgecolor="black", linewidth=0.5)
-                    ax.add_patch(rect)
-            
+            ax.set_xticklabels(corr.columns, rotation=45, ha="right", fontsize=9, family="DejaVu Serif")
+            ax.set_yticklabels(corr.index, fontsize=9, family="DejaVu Serif")
+    
+            # grid (cell borders)
+            ax.set_xticks(np.arange(-.5, len(corr.columns), 1), minor=True)
+            ax.set_yticks(np.arange(-.5, len(corr.index), 1), minor=True)
+            ax.grid(which="minor", color="black", linestyle='-', linewidth=0.5)
+            ax.tick_params(which="minor", bottom=False, left=False)
+    
             # add numbers inside cells
             for i in range(len(corr.index)):
                 for j in range(len(corr.columns)):
                     ax.text(j, i, f"{corr.iloc[i,j]:.{heatmap_decimals}f}",
                             ha="center", va="center", color="black",
-                            fontsize=8, family=custom_style["font_family"])
-            
+                            fontsize=8, family="DejaVu Serif")
+    
             # colorbar + title
             cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-            cbar.set_label("Correlation", fontsize=12, fontweight="bold", family=custom_style["font_family"])
-            ax.set_title(f"{title} — {method.title()} Correlation Heatmap",
-                         fontsize=14, weight="bold", family=custom_style["font_family"])
-            
+            cbar.set_label("Correlation", fontsize=12, fontweight="bold", family="DejaVu Serif")
+            ax.set_title(f"{method.title()} Correlation Heatmap",
+                         fontsize=14, weight="bold", family="DejaVu Serif")
+    
             plt.tight_layout()
             buf = BytesIO()
             fig_dl.savefig(buf, format=export_fmt, dpi=export_dpi,
                            bbox_inches="tight", facecolor="white")
             buf.seek(0)
-
     
             st.download_button(
                 f"Download ({tag.title()} Style, {export_fmt.upper()}, {export_dpi} DPI)",
