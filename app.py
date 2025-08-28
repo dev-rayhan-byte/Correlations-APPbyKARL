@@ -96,6 +96,7 @@ if uploaded_file:
         <b>UX Designer & Benchmarking Lead:</b> Al Amin<br>
         <b>Testing & QA Engineer:</b><br>
         • Md Nurnabe Sagor<br>• Pranto Das<br>• Md. Sabbir Ahmed<br>• Abu Sadat<br><br>
+        <b>Networking Expert:</b> Abdul Hafiz Tamim<br>
         <b>Domain Expert:</b> Shahariar Emon<br>
         <b>Co-Supervisor:</b> Md. Asaduzzaman<br>
         <b>Supervisor:</b> Md. Khorshed Alam
