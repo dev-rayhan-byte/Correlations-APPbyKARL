@@ -67,7 +67,7 @@ st.markdown("""
 
 # ---------- Formal Citation Section (Main Page) ----------
 st.markdown("""
-<div style="padding:20px; border-radius:12px; background-color:#BB2649; border:1px solid #c3d7f5; margin-bottom:25px;">
+<div style="padding:20px; border-radius:12px; background-color:#D7E8BC; border:1px solid #c3d7f5; margin-bottom:25px;">
     <h3 style="margin-top:0; color:#002147;">Citation & Acknowledgment</h3>
     <p style="font-size:15px; line-height:1.6; color:#222;">
         If you use <b>KARL Lab Correlation Tool (Pro Edition)</b> in your research, publications, or projects, 
@@ -96,7 +96,7 @@ st.sidebar.markdown("""
 # ---------- Sidebar Citation Tool ----------
 st.sidebar.markdown("##  Citation")
 col1, col2 = st.sidebar.columns([1,1])
-with col2:
+with col1:
     st.link_button(" DOI Link", "https://doi.org/10.5281/zenodo.17047382")
 
 # ---------- File uploader ----------
