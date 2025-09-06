@@ -11,27 +11,7 @@ from io import BytesIO
 # -------------------------------
 st.set_page_config(page_title="KARL Correlation Tool", layout="wide")
 
-# ---------- Citation Formats ----------
-citation_formats = {
-    "APA": """Rayhan, M., Al, A., Md Nurnabe Sagor, Pranto Das, Md. Sabbir Ahmed, 
-Abu Sadat, Abdul Hafiz Tamim, Emon, S., Asad, M. A., & Alam, M. K. (2025). 
-An Open-Source Framework for Advanced Correlation Analysis: 
-The KARL Lab Correlation Tool (Pro Edition). Zenodo. 
-https://doi.org/10.5281/zenodo.17047382""",
 
-    "BibTeX": """@software{karl_correlation_tool_2025,
-  author       = {Rayhan, M. and Al, A. and Md Nurnabe Sagor and Pranto Das and Md. Sabbir Ahmed and 
-                  Abu Sadat and Abdul Hafiz Tamim and Emon, S. and Asad, M. A. and Alam, M. K.},
-  title        = {An Open-Source Framework for Advanced Correlation Analysis: The KARL Lab Correlation Tool (Pro Edition)},
-  year         = {2025},
-  publisher    = {Zenodo},
-  doi          = {10.5281/zenodo.17047382},
-  url          = {https://doi.org/10.5281/zenodo.17047382}
-}""",
-
-    "MLA": """Rayhan, M., et al. "An Open-Source Framework for Advanced Correlation Analysis: 
-The KARL Lab Correlation Tool (Pro Edition)." 2025, Zenodo, doi:10.5281/zenodo.17047382."""
-}
 
 # ---------- Styling helpers ----------
 def apply_style(paper_mode: bool):
@@ -87,13 +67,13 @@ st.markdown("""
 
 # ---------- Formal Citation Section (Main Page) ----------
 st.markdown("""
-<div style="padding:20px; border-radius:12px; background-color:#f4f8ff; border:1px solid #c3d7f5; margin-bottom:25px;">
+<div style="padding:20px; border-radius:12px; background-color:#BB2649; border:1px solid #c3d7f5; margin-bottom:25px;">
     <h3 style="margin-top:0; color:#002147;">Citation & Acknowledgment</h3>
     <p style="font-size:15px; line-height:1.6; color:#222;">
         If you use <b>KARL Lab Correlation Tool (Pro Edition)</b> in your research, publications, or projects, 
         please cite it as follows:
     </p>
-    <blockquote style="font-size:14px; background:#ffffff; padding:12px 16px; border-left:4px solid #4a90e2; border-radius:6px; margin:12px 0;">
+    <blockquote style="font-size:14px; background:#5B5EA6; padding:12px 16px; border-left:4px solid #4a90e2; border-radius:6px; margin:12px 0;">
         Rayhan, M., Al, A., Md Nurnabe Sagor, Pranto Das, Md. Sabbir Ahmed, Abu Sadat, 
         Abdul Hafiz Tamim, Emon, S., Asad, M. A., & Alam, M. K. (2025). 
         <i>An Open-Source Framework for Advanced Correlation Analysis: 
@@ -114,20 +94,10 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------- Sidebar Citation Tool ----------
-st.sidebar.markdown("## 📖 Citation")
-format_choice = st.sidebar.selectbox("Select Citation Style", list(citation_formats.keys()))
-st.sidebar.markdown(f"""
-<div style="padding:12px; border-radius:10px; background-color:#333; color:#eee; font-size:13px;">
-    <b>{format_choice} Citation:</b><br>
-    <pre style="white-space: pre-wrap; font-size:12px;">{citation_formats[format_choice]}</pre>
-</div>
-""", unsafe_allow_html=True)
+st.sidebar.markdown("##  Citation")
 col1, col2 = st.sidebar.columns([1,1])
-with col1:
-    if st.button("📋 Copy Citation"):
-        st.toast(f"{format_choice} citation copied to clipboard ✅")
 with col2:
-    st.link_button("🔗 DOI Link", "https://doi.org/10.5281/zenodo.17047382")
+    st.link_button(" DOI Link", "https://doi.org/10.5281/zenodo.17047382")
 
 # ---------- File uploader ----------
 uploaded_file = st.file_uploader("Upload your dataset", type=["csv", "xlsx"])
