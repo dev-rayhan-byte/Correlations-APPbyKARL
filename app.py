@@ -69,18 +69,18 @@ st.markdown("""
 st.markdown("""
 <div style="padding:20px; border-radius:12px; background-color:#D7E8BC; border:1px solid #c3d7f5; margin-bottom:25px;">
     <h3 style="margin-top:0; color:#002147;">Citation & Acknowledgment</h3>
-    <p style="font-size:15px; line-height:1.6; color:#222;">
+    <p style="font-size:18px; line-height:1.6; color:#222;">
         If you use <b>KARL Lab Correlation Tool (Pro Edition)</b> in your research, publications, or projects, 
         please cite it as follows:
     </p>
-    <blockquote style="font-size:14px; background:#5B5EA6; padding:12px 16px; border-left:4px solid #4a90e2; border-radius:6px; margin:12px 0;">
+    <blockquote style="font-size:14px; background:#9F2436; padding:12px 16px; border-left:4px solid #4a90e2; border-radius:6px; margin:12px 0;">
         Rayhan, M., Al, A., Md Nurnabe Sagor, Pranto Das, Md. Sabbir Ahmed, Abu Sadat, 
         Abdul Hafiz Tamim, Emon, S., Asad, M. A., & Alam, M. K. (2025). 
         <i>An Open-Source Framework for Advanced Correlation Analysis: 
         The KARL Lab Correlation Tool (Pro Edition)</i>. Zenodo. 
         <a href="https://doi.org/10.5281/zenodo.17047382" target="_blank">https://doi.org/10.5281/zenodo.17047382</a>
     </blockquote>
-    <p style="font-size:13px; color:#555;">
+    <p style="font-size:16px; color:#555;">
         Proper citation helps us sustain and improve this tool for the scientific community. 
     </p>
 </div>
@@ -94,7 +94,7 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------- Sidebar Citation Tool ----------
-st.sidebar.markdown("##  Citation")
+st.sidebar.markdown("## Cite This Work")
 col1, col2 = st.sidebar.columns([1,1])
 with col1:
     st.link_button(" DOI Link", "https://doi.org/10.5281/zenodo.17047382")
